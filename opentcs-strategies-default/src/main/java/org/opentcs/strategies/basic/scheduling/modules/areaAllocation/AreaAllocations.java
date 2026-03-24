@@ -1,0 +1,102 @@
+// SPDX-FileCopyrightText: The openTCS Authors
+// SPDX-License-Identifier: MIT
+package org.opentcs.strategies.basic.scheduling.modules.areaAllocation;
+
+import jakarta.inject.Inject;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import org.locationtech.jts.geom.GeometryCollection;
+import org.opentcs.components.Lifecycle;
+import org.opentcs.data.TCSObjectReference;
+import org.opentcs.data.model.Vehicle;
+
+/**
+ * A container for keeping track of areas allocated by vehicles.
+ */
+public class AreaAllocations
+    implements
+      Lifecycle {
+
+  private final Map<TCSObjectReference<Vehicle>, GeometryCollection> allocatedAreasByVehicles
+      = new HashMap<>();
+  private boolean initialized = false;
+
+  @Inject
+  public AreaAllocations() {
+  }
+
+  @Override
+  public void initialize() {
+    if (isInitialized()) {
+      return;
+    }
+
+    initialized = true;
+  }
+
+  @Override
+  public boolean isInitialized() {
+    return initialized;
+  }
+
+  @Override
+  public void terminate() {
+    if (!isInitialized()) {
+      return;
+    }
+
+    clearAreaAllocations();
+
+    initialized = false;
+  }
+
+  /**
+   * Clears the area allocations for all vehicles.
+   */
+  public void clearAreaAllocations() {
+    allocatedAreasByVehicles.clear();
+  }
+
+  /**
+   * Sets the allocation for the given vehicle to the given allocated areas, discarding any previous
+   * area allocation.
+   *
+   * @param vehicleRef The vehicle reference.
+   * @param allocatedAreas The allocated areas to set as the vehicle's current area allocation.
+   */
+  public void setAreaAllocation(
+      TCSObjectReference<Vehicle> vehicleRef,
+      GeometryCollection allocatedAreas
+  ) {
+    allocatedAreasByVehicles.put(vehicleRef, allocatedAreas);
+  }
+
+  /**
+   * Clears the area allocation for the given vehicle.
+   *
+   * @param vehicleRef The vehicle reference.
+   */
+  public void clearAreaAllocation(TCSObjectReference<Vehicle> vehicleRef) {
+    allocatedAreasByVehicles.remove(vehicleRef);
+  }
+
+  /**
+   * Checks if the given vehicle is allowed to allocate the given ares.
+   *
+   * @param vehicleRef The vehicle reference.
+   * @param requestedAreas The requested areas (to be allocated).
+   * @return {@code true}, if the vehicle is allowed to allocate the given areas, otherwise
+   * {@code false} (i.e. in case some of the requested areas are already allocated by other
+   * vehicles).
+   */
+  public boolean isAreaAllocationAllowed(
+      TCSObjectReference<Vehicle> vehicleRef,
+      GeometryCollection requestedAreas
+  ) {
+    return allocatedAreasByVehicles.entrySet().stream()
+        // Only check areas allocated by vehicles other than the given vehicle.
+        .filter(entry -> !Objects.equals(entry.getKey(), vehicleRef))
+        .noneMatch(entry -> entry.getValue().intersects(requestedAreas));
+  }
+}

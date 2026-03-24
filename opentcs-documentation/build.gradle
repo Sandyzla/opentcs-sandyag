@@ -1,0 +1,230 @@
+// SPDX-FileCopyrightText: The openTCS Authors
+// SPDX-License-Identifier: MIT
+
+plugins {
+  alias(libs.plugins.hidetake.swagger.generator)
+  alias(libs.plugins.openapi.generator)
+  // To use AsciiDoctor for documentation
+  alias(libs.plugins.asciidocor.jvm.convert)
+}
+
+evaluationDependsOn(':opentcs-api-base')
+evaluationDependsOn(':opentcs-api-injection')
+evaluationDependsOn(':opentcs-common')
+evaluationDependsOn(':opentcs-kernel')
+evaluationDependsOn(':opentcs-kernelcontrolcenter')
+evaluationDependsOn(':opentcs-modeleditor')
+evaluationDependsOn(':opentcs-operationsdesk')
+evaluationDependsOn(':opentcs-peripheralcommadapter-loopback')
+evaluationDependsOn(':opentcs-plantoverview-panel-loadgenerator')
+
+apply from: "${rootDir}/gradle/java-project.gradle"
+apply from: "${rootDir}/gradle/java-codequality.gradle"
+apply from: "${rootDir}/gradle/publishing-java.gradle"
+
+apply plugin: 'distribution'
+
+def generatedOpenApiDir = file("$buildDir/generated-openapi")
+def webApiDir = file("$buildDir/swagger-ui-servicewebapiv1")
+def configDocDir = file("$buildDir/configdoc")
+def asciidocOutputDir = file("$buildDir/docs/asciidoc")
+
+ext.collectableDistDir = file("$buildDir/install")
+
+configurations {
+  schemagen
+  configdocgen
+}
+
+swaggerSources {
+  servicewebapiv1 {
+    inputFile = file("$generatedOpenApiDir/openapi.json")
+  }
+}
+
+dependencies {
+  api project(':opentcs-common')
+  api project(':opentcs-kernel')
+
+  schemagen project(':opentcs-kernel')
+  schemagen project(':opentcs-modeleditor')
+  schemagen project(':opentcs-operationsdesk')
+  schemagen jar.outputs.files
+
+  configdocgen project(':opentcs-kernel')
+  configdocgen project(':opentcs-kernelcontrolcenter')
+  configdocgen project(':opentcs-modeleditor')
+  configdocgen project(':opentcs-operationsdesk')
+  configdocgen jar.outputs.files
+
+  swaggerUI libs.swagger.ui
+  swaggerUI libs.openapi.generator.cli
+}
+
+distributions {
+  main {
+    contents.from(project(':opentcs-api-base').javadoc.destinationDir) {
+      into('api-base')
+    }
+    contents.from(project(':opentcs-api-injection').javadoc.destinationDir) {
+      into('api-injection')
+    }
+    contents.from(webApiDir) {
+      into('service-web-api-v1')
+    }
+    contents.from(asciidocOutputDir)
+  }
+}
+
+task renderDocs {
+  dependsOn project(':opentcs-api-base').javadoc
+  dependsOn project(':opentcs-api-injection').javadoc
+  dependsOn 'asciidoctor'
+  dependsOn 'generateSwaggerUI'
+}
+installDist.dependsOn renderDocs
+
+task bundleOpenApiSpecFiles(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+  generatorName = "openapi"
+  inputSpec = file("src/docs/service-web-api-v1/openapi.yaml").toString()
+  outputDir = generatedOpenApiDir.toString()
+}
+generateSwaggerUIServicewebapiv1.dependsOn bundleOpenApiSpecFiles
+
+distTar {
+  enabled = false
+  dependsOn renderDocs
+  archiveBaseName = archiveBaseName.get().toLowerCase()
+}
+
+distZip {
+  dependsOn renderDocs
+  archiveBaseName = archiveBaseName.get().toLowerCase()
+}
+
+task release {
+  dependsOn build
+  dependsOn installDist
+}
+
+asciidoctor {
+  dependsOn 'configdocgen'
+
+  baseDirFollowsSourceDir()
+  // Where to put the rendered documents. Default: $buildDir/docs/asciidoc.
+  outputDir = asciidocOutputDir
+  sources {
+    include 'changelog.adoc'
+    include 'contributors.adoc'
+    include 'developers-guide.adoc'
+    include 'index.adoc'
+    include 'users-guide.adoc'
+  }
+  outputOptions{
+    // Whether to put backends' outputs into separate subdirectories
+    separateOutputDirs = false
+    // Set the backends the processor should use: html5 (default), docbook, manpage, pdf, deckjs
+    backends = ['html5']
+  }
+  attributes 'configdoc': configDocDir,
+      'webfonts': false, // Disable webfonts
+      'iconfont-remote': false, // Disable remote icon fonts
+      'documentation-testSrc': project.testSrcDir,
+      'loopback-guiceSrc': project(':opentcs-commadapter-loopback').guiceSrcDir,
+      'peripheral-loopback-guiceSrc': project(':opentcs-peripheralcommadapter-loopback').guiceSrcDir,
+      'controlCenter-guiceSrc': project(':opentcs-kernelcontrolcenter').guiceSrcDir,
+      'kernel-guiceSrc': project(':opentcs-kernel').guiceSrcDir,
+      'loadGeneratorPanel-guiceSrc': project(':opentcs-plantoverview-panel-loadgenerator').guiceSrcDir
+
+  resources {
+    from(sourceDir) {
+      include '_assets/**'
+      include '**/*.jpg'
+      include '**/*.png'
+      include '**/*.svg'
+      exclude 'themes'
+    }
+  }
+}
+
+task configdocgen {
+  dependsOn 'jar'
+  dependsOn ':opentcs-kernel:jar'
+  dependsOn ':opentcs-kernelcontrolcenter:jar'
+  dependsOn ':opentcs-modeleditor:jar'
+  dependsOn ':opentcs-operationsdesk:jar'
+
+  doLast {
+    mkdir(configDocDir)
+
+    javaexec {
+      classpath configurations.configdocgen
+      mainClass = "org.opentcs.documentation.ConfigDocGenerator"
+      args = [
+        "org.opentcs.kernel.KernelApplicationConfiguration",
+        "${configDocDir}/KernelApplicationConfigurationEntries.adoc",
+
+        "org.opentcs.kernel.OrderPoolConfiguration",
+        "${configDocDir}/OrderPoolConfigurationEntries.adoc",
+
+        "org.opentcs.strategies.basic.dispatching.DefaultDispatcherConfiguration",
+        "${configDocDir}/DefaultDispatcherConfigurationEntries.adoc",
+
+        "org.opentcs.strategies.basic.routing.DefaultRouterConfiguration",
+        "${configDocDir}/DefaultRouterConfigurationEntries.adoc",
+
+        "org.opentcs.strategies.basic.routing.jgrapht.ShortestPathConfiguration",
+        "${configDocDir}/ShortestPathConfigurationEntries.adoc",
+
+        "org.opentcs.strategies.basic.routing.edgeevaluator.ExplicitPropertiesConfiguration",
+        "${configDocDir}/ExplicitPropertiesConfigurationEntries.adoc",
+
+        "org.opentcs.strategies.basic.peripherals.dispatching.DefaultPeripheralJobDispatcherConfiguration",
+        "${configDocDir}/DefaultPeripheralJobDispatcherConfigurationEntries.adoc",
+
+        "org.opentcs.kernel.extensions.servicewebapi.ServiceWebApiConfiguration",
+        "${configDocDir}/ServiceWebApiConfigurationEntries.adoc",
+
+        "org.opentcs.kernel.extensions.rmi.RmiKernelInterfaceConfiguration",
+        "${configDocDir}/RmiKernelInterfaceConfigurationEntries.adoc",
+
+        "org.opentcs.kernel.SslConfiguration",
+        "${configDocDir}/KernelSslConfigurationEntries.adoc",
+
+        "org.opentcs.kernel.vehicles.VehiclePositionResolverConfiguration",
+        "${configDocDir}/VehiclePositionResolverConfigurationEntries.adoc",
+
+        "org.opentcs.virtualvehicle.VirtualVehicleConfiguration",
+        "${configDocDir}/VirtualVehicleConfigurationEntries.adoc",
+
+        "org.opentcs.commadapter.peripheral.loopback.VirtualPeripheralConfiguration",
+        "${configDocDir}/VirtualPeripheralConfigurationEntries.adoc",
+
+        "org.opentcs.kernel.extensions.watchdog.WatchdogConfiguration",
+        "${configDocDir}/WatchdogConfigurationEntries.adoc",
+
+        "org.opentcs.kernelcontrolcenter.util.KernelControlCenterConfiguration",
+        "${configDocDir}/KernelControlCenterApplicationConfigurationEntries.adoc",
+
+        "org.opentcs.kernelcontrolcenter.exchange.SslConfiguration",
+        "${configDocDir}/KccSslConfigurationEntries.adoc",
+
+        "org.opentcs.guing.common.exchange.SslConfiguration",
+        "${configDocDir}/PoSslConfigurationEntries.adoc",
+
+        "org.opentcs.modeleditor.util.ModelEditorConfiguration",
+        "${configDocDir}/ModelEditorConfigurationEntries.adoc",
+
+        "org.opentcs.modeleditor.util.ElementNamingSchemeConfiguration",
+        "${configDocDir}/PO_ElementNamingSchemeConfigurationEntries.adoc",
+
+        "org.opentcs.operationsdesk.util.OperationsDeskConfiguration",
+        "${configDocDir}/OperationsDeskConfigurationEntries.adoc"
+      ]
+    }
+  }
+}
+
+publishing {
+  ((MavenPublication) publications.getByName(project.name + '_mavenJava')).artifact(distZip)
+}

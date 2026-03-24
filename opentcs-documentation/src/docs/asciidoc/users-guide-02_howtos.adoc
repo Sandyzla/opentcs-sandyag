@@ -1,0 +1,184 @@
+// SPDX-FileCopyrightText: The openTCS Authors
+// SPDX-License-Identifier: CC-BY-4.0
+
+== How-to Guides
+
+=== Creating curved paths between points
+
+1. In the Model Editor application, select btn:[Bezier] from the path tools and connect two points by clicking on the first point, dragging the mouse to the second point and releasing the mouse button there.
+2. Activate the selection tool and click on the previously created bezier path.
+   Two blue control points will appear.
+3. Drag the control points to change the shape of the path.
+
+=== Automatically enabling drivers on startup
+
+To automatically enable vehicle drivers when the kernel is started, add the following line to the kernel configuration file (`config/opentcs-kernel.properties` in the kernel application directory):
+
+[source, properties]
+----
+kernelapp.autoEnableDriversOnStartup = true
+----
+
+To enable peripheral drivers on startup, add the following line:
+
+[source, properties]
+----
+kernelapp.autoEnablePeripheralDriversOnStartup = true
+----
+
+NOTE: See <<Kernel configuration>> for a description of all kernel configuration entries.
+
+=== Automatically selecting a specific vehicle driver on startup
+
+Automatic attachment of vehicle drivers by default works as follows:
+The kernel asks every available vehicle driver if it can attach to a given vehicle and selects the first one that can.
+It asks the loopback driver last, as that one is always available and can attach to any vehicle, but should not prevent actual vehicle drivers to be attached.
+As a result, if there is only one driver for your vehicle(s), you usually do not have to do anything for it to be selected.
+
+In some less common cases, you may have multiple vehicle drivers registered with the kernel that can all attach to the vehicles in your plant model.
+To automatically select a specific driver in such cases, set a property with the key `tcs:preferredAdapterClass` on the vehicles, with its value being the name of the Java class implementing the driver's adapter factory.
+(If you do not know this class name, ask the developer who provided the vehicle driver to you for it.)
+
+=== Configuring a virtual vehicle's characteristics
+
+The loopback driver supports some (limited) configuration of the virtual vehicle's characteristics via properties set in the plant model.
+You can set the properties the following way:
+
+. Start the Model Editor application and create or load a plant model.
+. In the Model Editor application's tree view of the plant model, select a vehicle.
+. In the table showing the vehicle's properties, click into the value field labelled btn:[Miscellaneous].
+  In the dialog shown, add a property key and value according to the list below.
+. Save the model and upload it to the kernel as described in <<Saving the plant model>>.
+
+The loopback driver interprets properties with the following keys:
+
+* `loopback:initialPosition`:
+  Set the property value to the name of a point in the plant model.
+  When started, the loopback adapter will set the virtual vehicle's current position to this.
+  (Default value: not set)
+* `loopback:acceleration`:
+  Set the property value to a positive integer representing an acceleration in mm/s^2^.
+  The loopback adapter will simulate vehicle movement with the given acceleration.
+  (Default value: 500)
+* `loopback:deceleration`:
+  Set the property value to a negative integer representing an acceleration in mm/s^2^.
+  The loopback adapter will simulate vehicle movement with the given deceleration.
+  (Default value: -500)
+* `loopback:loadOperation`:
+  Set the property value to a string representing the virtual vehicle's load operation.
+  When the virtual vehicle executes this operation, the loopback adapter will set the its load handling device's state to _full_.
+  (Default value: not set)
+* `loopback:unloadOperation`:
+  Set the property value to a string representing the virtual vehicle's unload operation.
+  When the virtual vehicle executes this operation, the loopback adapter will set its load handling device's state to _empty_.
+  (Default value: not set)
+* `loopback:operatingTime`:
+  Set the property value to a positive integer representing the virtual vehicle's operating time in milliseconds.
+  When the virtual vehicle executes an operation, the loopback adapter will simulate an operating time accordingly.
+  (Default value: 5000)
+
+=== Transforming coordinates sent to / received from vehicles
+
+It is possible that not all vehicles managed by an openTCS kernel instance are using the same coordinate system as the one in the plant model.
+To ease integration with such situations, the kernel can transform coordinates when they are sent to / received from vehicles.
+This section describes the included transformation.
+
+NOTE: This mechanism is extensible:
+Developers can integrate their own transformation components with the openTCS kernel to apply custom, complex transformations to data sent to / received from vehicles.
+
+The included transformation method maps coordinates from the plant model's coordinate system to the coordinate system of a vehicle (when sending coordinates to the vehicle) and vice versa (when receiving coordinates from the vehicle).
+For this, the position and orientation of the vehicle's coordinate system in relation to the plant model's coordinate system can be defined by providing...
+
+* translations in x, y and z direction in relation to the origin of the plant model's coordinate system.
+  (Example: Offsets of `x=1000`, `y=2000` and `z=3000` mean that the origin of the vehicle's coordinate system is located at the coordinates `x=1000`, `y=2000` and `z=3000` in the plant model's coordinate system.)
+* a rotation of the vehicle's coordinate system along its z-axis in relation to orientation of the plant model's coordinate system.
+  (Example: A 90-degree rotation means that the vehicle's coordinate system is rotated 90 degrees counter-clockwise in relation to the plant model's coordinate system.)
+
+To make use of this transformation method for a specific vehicle, do the following for the respective vehicle element in the plant model:
+
+1. Set a property with the key `tcs:vehicleDataTransformer` to the value `COORDINATE_SYSTEM_MAPPER`.
+2. Set properties with the keys `tcs:coordinateSystemMapper.translation.x`, `tcs:coordinateSystemMapper.translation.y` and `tcs:coordinateSystemMapper.translation.z` to values for translations in the x, y and z direction.
+   The respective values are expected to be integer values and describe translations in millimeters.
+   If one of the properties is not set, a translation of 0 mm is used for the respective translation.
+3. Set a property with the key `tcs:coordinateSystemMapper.rotation.z` to the value for the rotation along the coordinate system's z-axis.
+   The value is expected to be a floating-point value in degrees.
+   If the property is not set, a rotation of 0 degrees is used.
+
+=== Running kernel and its clients on separate systems
+
+The kernel and its clients (the Model Editor, Operations Desk and Kernel Control Center applications) communicate via the Java Remote Method Invocation (RMI) mechanism.
+This makes it possible to run the kernel and the clients on separate hosts, as long as a usable network connection between these systems exists.
+
+By default, the Model Editor, the Operations Desk and the Kernel Control Center are configured to connect to a kernel running on the same host.
+To connect them to a kernel running on a remote host, e.g. on a host named myhost.example.com, do the following:
+
+* For the Model Editor, set the configuration parameter `modeleditor.connectionBookmarks` to `SomeDescription|myhost.example.com|1099`.
+* For the Operations Desk, set the configuration parameter `operationsdesk.connectionBookmarks` to `SomeDescription|myhost.example.com|1099`.
+* For the Kernel Control Center, set the configuration parameter `kernelcontrolcenter.connectionBookmarks` to `SomeDescription|myhost.example.com|1099`.
+
+The configuration value can be a comma-separated list of `<description>|<host>|<port>` sets.
+The applications will automatically try to connect to the first host in the list.
+If that fails, they will show a dialog to select an entry or enter a different address to connect to.
+
+=== Encrypting communication with the kernel
+
+By default, client applications and the kernel communicate via plain Java Remote Method Invocation (RMI) calls or HTTP requests.
+These communication channels can optionally be encrypted via SSL/TLS.
+To achieve this, do the following:
+
+. Generate a keystore/truststore pair (`keystore.p12` and `truststore.p12`).
+.. You can use the Unix shell script or Windows batch file (`generateKeystores.sh/.bat`) provided in the kernel application's directory for this.
+.. The scripts use the key and certificate management tool 'keytool' that is included in both the Java JDK and JRE.
+   If 'keytool' is not contained in the system's `Path` environment variable the `KEYTOOL_PATH` variable in the respective script needs to be modified to point to the location where the 'keytool' is located.
+.. By default, the generated files are placed in the kernel application's `config` directory.
+. Copy the `truststore.p12` file to the client application's (Model Editor, Operations Desk or Kernel Control Center) `config` directory.
+  Leave the file in the kernel application's `config` directory as well.
+. In the kernel's configuration file, enable SSL for the RMI interface and/or for the web service interface.
+  (See <<RMI kernel interface configuration entries>> and/or <<Service web API configuration entries>> for a description of the configuration entries.)
+. If you enabled SSL for the RMI interface, you need to enable it in the Model Editor's, Operations Desk's and the Kernel Control Center's configuration files, too.
+  (See <<SSL model editor-side application configuration entries>>, <<SSL operation desk-side application configuration entries>> and <<SSL KCC-side application configuration entries>> for a description of the configuration entries.)
+
+=== Enabling RMI on multihomed kernel host
+
+If your kernel is running on a host with multiple IP addresses, you may observe connection problems with remote clients via RMI connections.
+Clients may be unable to connect to the kernel, or communication between client and kernel may be slow, especially when SSL is enabled for the RMI interface.
+
+In that case, set the kernel JVM's property `java.rmi.server.hostname` to the correct IP address of the machine running it.
+(Also see https://docs.oracle.com/javase/8/docs/technotes/guides/rmi/faq.html#netmultihomed.)
+
+=== Configuring automatic parking and recharging
+
+By default, idle vehicles remain where they are after processing their last transport order.
+You can change this in the kernel's configuration file:
+
+* To order vehicles to charging locations automatically, set the configuration parameter `defaultdispatcher.rechargeIdleVehicles` to `true`.
+  The default dispatcher will then look for locations at which the idle vehicle's recharge operation is possible and create orders to send it to such a location (if unoccupied).
+  (Note that the string used for the operation is driver-specific.)
+* To order vehicles to parking positions automatically, set the configuration parameter `defaultdispatcher.parkIdleVehicles` to `true`.
+  The default dispatcher will then look for unoccupied parking positions and create orders to send the idle vehicle there.
+
+=== Configuring order pool cleanup
+
+By default, openTCS checks every minute for finished or failed transport orders and peripheral jobs that are older than 24 hours.
+These orders and jobs are removed from the pool.
+To customize this behaviour, do the following:
+
+. Set the configuration entry `orderpool.sweepInterval` to a value according to your needs.
+  The default value is 60.000 (milliseconds, corresponding to an interval of one minute).
+. Set the configuration entry `orderpool.sweepAge` to a maximum age of finished orders and jobs according to your needs.
+  The default value is 86.400.000 (milliseconds, corresponding to 24 hours that a finished order or job should be kept in the pool).
+
+=== Using model element properties for project-specific data
+
+Every object in the plant model - i.e. points, paths, locations, location types and vehicles - can be augmented with arbitrary project-specific data that can be used, e.g. by vehicle drivers, custom client applications, etc..
+Possible uses for such data could be informing the vehicle driver about additional actions to be performed by a vehicle when moving along a path in the model (e.g. flashing direction indicators, displaying a text string on a display, giving an acoustic warning) or controlling the behaviour of peripheral systems (e.g. automatic fire protection gates).
+
+The data can be stored in properties, i.e. key-value pairs attached to the model elements, where both the key and the corresponding value are text strings.
+These key-value pairs can be created and edited using the Model Editor application:
+Simply select the model element you want to add a key-value pair to and click into the value field labelled btn:[Miscellaneous] in the properties table.
+In the dialog shown, set the key-value pairs you need to store your project-specific information.
+
+NOTE: For your project-specific key-value pairs, you may specify arbitrary keys.
+openTCS itself will not make any use of this data; it will merely store it and provide it for custom vehicle drivers and/or other extensions.
+You should, however, not use any keys starting with `"tcs:"` for storing project-specific data.
+Any keys with this prefix are reserved for official openTCS features, and using them could lead to collisions.

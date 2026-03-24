@@ -1,0 +1,27 @@
+// SPDX-FileCopyrightText: The openTCS Authors
+// SPDX-License-Identifier: CC-BY-4.0
+
+= openTCS: Developer's Guide
+The openTCS developers
+:doctype: book
+:toc: left
+:toclevels: 3
+:sectnums: all
+:sectnumlevels: 6
+:docinfo: shared
+:imagesdir: _images
+:stylesdir: _assets/css
+:icons: font
+:source-highlighter: coderay
+:coderay-linenums-mode: table
+:last-update-label!:
+:experimental:
+
+include::developers-guide-01_tutorials.adoc[]
+
+include::developers-guide-02_howtos.adoc[]
+
+include::developers-guide-03_reference.adoc[]
+
+// Excluded as long as it is without content.
+//include::developers-guide-04_explanation.adoc[]

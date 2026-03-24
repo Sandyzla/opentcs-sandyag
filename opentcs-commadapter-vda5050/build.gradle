@@ -1,0 +1,127 @@
+// SPDX-FileCopyrightText: The openTCS Authors
+// SPDX-License-Identifier: MIT
+
+buildscript {
+  repositories {
+    mavenLocal()
+    mavenCentral()
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
+  }
+}
+
+plugins {
+  id 'maven-publish'
+  id 'signing'
+  alias(libs.plugins.spotless)
+//  alias(libs.plugins.gradle.nexus.publish.plugin)
+  alias(libs.plugins.jacocolog)
+}
+
+//apply from: "${rootDir}/gradle/common.gradle"
+//apply from: "${rootDir}/gradle/java-project.gradle"
+//apply from: "${rootDir}/gradle/java-codequality.gradle"
+//apply from: "${rootDir}/gradle/guice-library.gradle"
+//apply from: "${rootDir}/gradle/publishing-gitlab.gradle"
+//apply from: "${rootDir}/gradle/publishing-ossrh.gradle"
+//apply from: "${rootDir}/gradle/publishing-java.gradle"
+
+apply plugin: 'java-library'
+
+apply plugin: 'base'
+apply plugin: 'distribution'
+apply plugin: 'org.barfuin.gradle.jacocolog'
+
+repositories {
+  mavenLocal()
+  // 如果你在国内下载官方仓库很慢或者超时，可以优先加上阿里云镜像
+  maven { url 'https://maven.aliyun.com/repository/public' }
+  mavenCentral()
+}
+
+sourceSets {
+  main {
+    java {
+      srcDirs += ['src/guiceConfig/java']
+    }
+    resources {
+      srcDirs += ['src/guiceConfig/resources']
+    }
+  }
+}
+
+dependencies {
+  // 1. 引入 openTCS 本地核心模块
+  api project(':opentcs-api-injection')
+  api project(':opentcs-api-base')
+  // 【关键修复】补回 common 模块，解决 MapValueExtractor 等找不到的问题
+  implementation project(':opentcs-common')
+
+  // 2. 第三方依赖：Jackson JSON 处理
+  implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.0'
+  implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0'
+
+  // 3. 第三方依赖：VDA5050 特有的 JSON 校验与 MQTT 通讯
+  implementation 'com.github.erosb:everit-json-schema:1.14.2'
+  implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
+
+  // 4. 【关键修复】引入 SLF4J 日志接口，解决 Logger 找不到的问题
+  implementation 'org.slf4j:slf4j-api:2.0.17'
+  runtimeOnly 'org.slf4j:slf4j-jdk14:2.0.17'
+
+  // 测试依赖（如果跑测试报错，可以直接注掉这行）
+  // testImplementation 'org.assertj:assertj-core:3.24.2'
+}
+
+// Attributes for the AsciiDoc documentation to include code from source files
+//ext.javaSrcDir = sourceSets.main.java.srcDirs[0]
+//ext.collectableDistDir = new File(buildDir, 'install')
+//
+//distributions {
+//  main {
+//    contents.from(jar)
+//    contents.from(sourcesJar)
+//    contents.from(javadoc){
+//      into('api')
+//    }
+//  }
+//}
+//
+//distZip {
+//  dependsOn javadoc
+//  archiveClassifier = 'bin'
+//}
+//
+//distTar {
+//  enabled = false
+//  dependsOn javadoc
+//  archiveClassifier = 'bin'
+//}
+//
+//build {
+//  dependsOn installDist
+//}
+//
+//task distSrcZip(type: Zip) {
+//  archiveClassifier = 'src'
+//  from "${rootDir}"
+//
+//  includes << 'config/**'
+//  includes << 'gradle/**'
+//  includes << 'src/**'
+//  includes << '.nb-gradle-properties'
+//  includes << '*.gradle'
+//  includes << 'gradlew'
+//  includes << 'gradlew.bat'
+//
+//  excludes << '.gitlab'
+//  excludes << '.gradle'
+//  excludes << 'build'
+//}
+//
+//artifacts {
+//  archives distZip
+//  archives distSrcZip
+//  archives sourcesJar
+//}

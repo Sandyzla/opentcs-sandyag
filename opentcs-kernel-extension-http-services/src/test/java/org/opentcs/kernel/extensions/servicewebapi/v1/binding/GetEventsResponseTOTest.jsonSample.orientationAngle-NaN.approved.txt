@@ -1,0 +1,103 @@
+{
+  "timeStamp" : "1970-01-01T00:00:00Z",
+  "statusMessages" : [ {
+    "type" : "Vehicle",
+    "sequenceNumber" : 0,
+    "creationTimeStamp" : "1970-01-01T00:00:00Z",
+    "vehicleName" : "some-vehicle",
+    "properties" : [ {
+      "key" : "some-key",
+      "value" : "some-value"
+    } ],
+    "transportOrderName" : "some-transport-order",
+    "boundingBox" : {
+      "length" : 500,
+      "width" : 400,
+      "height" : 500,
+      "referenceOffset" : {
+        "x" : 20,
+        "y" : 20
+      }
+    },
+    "energyLevelGood" : 95,
+    "energyLevelCritical" : 20,
+    "energyLevelSufficientlyRecharged" : 40,
+    "energyLevelFullyRecharged" : 80,
+    "energyLevel" : 70,
+    "integrationLevel" : "TO_BE_UTILIZED",
+    "position" : "some-point",
+    "precisePosition" : {
+      "x" : 1,
+      "y" : 2,
+      "z" : 3
+    },
+    "orientationAngle" : "NaN",
+    "paused" : false,
+    "state" : "IDLE",
+    "stateTimestamp" : "2025-01-29T11:12:43Z",
+    "procState" : "IDLE",
+    "procStateTimestamp" : "2025-01-29T11:58:02Z",
+    "allocatedResources" : [ [ "some-path", "some-point" ], [ "some-other-path", "some-other-point" ] ],
+    "claimedResources" : [ [ "some-path", "some-point" ], [ "some-other-path", "some-other-point" ] ],
+    "acceptableOrderTypes" : [ {
+      "name" : "some-order-type",
+      "priority" : 1
+    } ],
+    "envelopeKey" : "some-envelope-key"
+  }, {
+    "type" : "TransportOrder",
+    "sequenceNumber" : 1,
+    "creationTimeStamp" : "1970-01-01T00:00:00Z",
+    "orderName" : "some-order",
+    "dispensable" : true,
+    "peripheralReservationToken" : "some-peripheral-reservation-token",
+    "wrappingSequence" : "some-wrapping-sequence",
+    "orderType" : "some-order-type",
+    "intendedVehicle" : "some-intended-vehicle",
+    "processingVehicleName" : "some-vehicle",
+    "orderState" : "BEING_PROCESSED",
+    "destinations" : [ {
+      "locationName" : "some-location",
+      "operation" : "some-operation",
+      "state" : "TRAVELLING",
+      "properties" : [ {
+        "key" : "some-key",
+        "value" : "some-value"
+      }, {
+        "key" : "some-other-key",
+        "value" : "some-other-value"
+      } ]
+    } ],
+    "properties" : [ {
+      "key" : "some-key",
+      "value" : "some-value"
+    }, {
+      "key" : "some-other-key",
+      "value" : "some-other-value"
+    } ]
+  }, {
+    "type" : "PeripheralJob",
+    "sequenceNumber" : 2,
+    "creationTimeStamp" : "1970-01-01T00:00:00Z",
+    "name" : "some-peripheral-job",
+    "reservationToken" : "some-token",
+    "relatedVehicle" : "some-vehicle",
+    "relatedTransportOrder" : "some-order",
+    "peripheralOperation" : {
+      "operation" : "some-operation",
+      "locationName" : "some-location",
+      "executionTrigger" : "AFTER_ALLOCATION",
+      "completionRequired" : true
+    },
+    "state" : "BEING_PROCESSED",
+    "creationTime" : "1970-01-01T00:00:00Z",
+    "finishedTime" : "+1000000000-12-31T23:59:59.999999999Z",
+    "properties" : [ {
+      "key" : "some-key",
+      "value" : "some-value"
+    }, {
+      "key" : "some-other-key",
+      "value" : "some-other-value"
+    } ]
+  } ]
+}

@@ -1,0 +1,19 @@
+// SPDX-FileCopyrightText: The openTCS Authors
+// SPDX-License-Identifier: MIT
+
+apply from: "${rootDir}/gradle/java-project.gradle"
+apply from: "${rootDir}/gradle/java-codequality.gradle"
+apply from: "${rootDir}/gradle/guice-project.gradle"
+apply from: "${rootDir}/gradle/publishing-java.gradle"
+
+dependencies {
+  api project(':opentcs-api-injection')
+  api project(':opentcs-common')
+
+  implementation libs.jgrapht.core
+  implementation libs.jts.core
+}
+
+task release {
+  dependsOn build
+}

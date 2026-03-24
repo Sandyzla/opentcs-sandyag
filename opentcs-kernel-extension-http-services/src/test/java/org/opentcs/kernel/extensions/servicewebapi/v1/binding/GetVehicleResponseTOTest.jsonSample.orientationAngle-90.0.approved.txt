@@ -1,0 +1,47 @@
+{
+  "name" : "some-vehicle",
+  "properties" : {
+    "some-key" : "some-value",
+    "some-other-key" : "some-other-value"
+  },
+  "length" : 50,
+  "boundingBox" : {
+    "length" : 50,
+    "width" : 40,
+    "height" : 30,
+    "referenceOffset" : {
+      "x" : 0,
+      "y" : 0
+    }
+  },
+  "energyLevelGood" : 90,
+  "energyLevelCritical" : 30,
+  "energyLevelSufficientlyRecharged" : 30,
+  "energyLevelFullyRecharged" : 90,
+  "energyLevel" : 48,
+  "integrationLevel" : "TO_BE_UTILIZED",
+  "paused" : false,
+  "procState" : "PROCESSING_ORDER",
+  "procStateTimestamp" : "2025-01-29T11:41:17Z",
+  "transportOrder" : "some-order",
+  "currentPosition" : "some-point",
+  "precisePosition" : {
+    "x" : 1,
+    "y" : 2,
+    "z" : 3
+  },
+  "orientationAngle" : 90.0,
+  "state" : "EXECUTING",
+  "stateTimestamp" : "2025-01-29T11:48:37Z",
+  "allocatedResources" : [ [ "some-path", "some-point" ], [ "some-other-path", "some-other-point" ] ],
+  "claimedResources" : [ [ "some-path", "some-point" ], [ "some-other-path", "some-other-point" ] ],
+  "allowedOrderTypes" : [ "OrderType001", "OrderType002" ],
+  "acceptableOrderTypes" : [ {
+    "name" : "OrderType001",
+    "priority" : 23
+  }, {
+    "name" : "OrderType002",
+    "priority" : 42
+  } ],
+  "envelopeKey" : "envelopeType-01"
+}

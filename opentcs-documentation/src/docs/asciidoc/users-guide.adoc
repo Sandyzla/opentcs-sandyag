@@ -1,0 +1,31 @@
+// SPDX-FileCopyrightText: The openTCS Authors
+// SPDX-License-Identifier: CC-BY-4.0
+
+= openTCS: User's Guide
+The openTCS developers
+:doctype: book
+:toc: left
+:toclevels: 3
+:sectnums: all
+:sectnumlevels: 6
+:docinfo: shared
+:imagesdir: _images
+:stylesdir: _assets/css
+:icons: font
+:source-highlighter: coderay
+:coderay-linenums-mode: table
+:last-update-label!:
+:experimental:
+
+// TIP: Always have the comprehensive http://asciidoctor.org/docs/asciidoc-syntax-quick-reference[QuickReference] handy.
+
+include::users-guide-01_introduction.adoc[]
+
+include::users-guide-01_tutorials.adoc[]
+
+include::users-guide-02_howtos.adoc[]
+
+include::users-guide-03_reference.adoc[]
+
+// Excluded as long as it is without content.
+//include::users-guide-04_explanation.adoc[]

@@ -1,0 +1,28 @@
+// SPDX-FileCopyrightText: The openTCS Authors
+// SPDX-License-Identifier: MIT
+
+apply from: "${rootDir}/gradle/java-project.gradle"
+apply from: "${rootDir}/gradle/java-codequality.gradle"
+apply from: "${rootDir}/gradle/guice-project.gradle"
+apply from: "${rootDir}/gradle/publishing-java.gradle"
+
+dependencies {
+  api project(':opentcs-api-injection')
+  api project(':opentcs-common')
+  api project(':opentcs-plantoverview-base')
+
+  // There does not seem to be an official binary release for JHotDraw...
+  api libs.jhotdraw
+  // This preview version of Docking Frames is not in Maven Central, yet.
+  api libs.dockingframes.common
+  api libs.dockingframes.core
+}
+
+task release {
+  dependsOn build
+}
+
+javadoc {
+  // For now, suppress a bunch of JavaDoc warnings.
+  options.addStringOption('Xdoclint:none', '-quiet')
+}

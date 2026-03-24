@@ -1,0 +1,25 @@
+// SPDX-FileCopyrightText: The openTCS Authors
+// SPDX-License-Identifier: MIT
+
+rootProject.name = 'opentcs'
+
+include 'opentcs-api-base'
+include 'opentcs-api-injection'
+include 'opentcs-impl-configuration-gestalt'
+include 'opentcs-common'
+include 'opentcs-commadapter-loopback'
+include 'opentcs-strategies-default'
+include 'opentcs-kernel-extension-http-services'
+include 'opentcs-kernel-extension-rmi-services'
+include 'opentcs-kernel'
+include 'opentcs-kernelcontrolcenter'
+include 'opentcs-plantoverview-base'
+include 'opentcs-plantoverview-common'
+include 'opentcs-modeleditor'
+include 'opentcs-operationsdesk'
+include 'opentcs-peripheralcommadapter-loopback'
+include 'opentcs-plantoverview-panel-loadgenerator'
+include 'opentcs-plantoverview-panel-resourceallocation'
+include 'opentcs-plantoverview-themes-default'
+include 'opentcs-documentation'
+include 'opentcs-commadapter-vda5050'

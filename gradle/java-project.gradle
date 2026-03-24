@@ -1,0 +1,87 @@
+// SPDX-FileCopyrightText: The openTCS Authors
+// SPDX-License-Identifier: MIT
+
+apply plugin: 'java-library'
+apply plugin: 'jacoco'
+apply plugin: 'com.diffplug.spotless'
+
+base.archivesName = name.toLowerCase()
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+}
+
+dependencies {
+  implementation libs.slf4j.api
+
+  compileOnly libs.jakarta.inject
+
+  compileOnly libs.jakarta.annotation
+  testCompileOnly libs.jakarta.annotation
+
+  testImplementation libs.junit.jupiter.api
+  testImplementation libs.junit.jupiter.params
+  testRuntimeOnly libs.junit.jupiter.engine
+  testRuntimeOnly libs.junit.platform.launcher
+
+  testImplementation libs.hamcrest
+  testImplementation libs.mockito
+  testImplementation libs.assertj
+  testImplementation libs.approvaltests
+
+  testRuntimeOnly libs.slf4j.jdk14
+}
+
+compileJava {
+  options.release = 21
+  options.compilerArgs << "-Werror"
+  options.compilerArgs << "-Xlint:all"
+  options.compilerArgs << "-Xlint:-serial"
+}
+
+compileTestJava {
+  options.release = 21
+  options.compilerArgs << "-Werror"
+  options.compilerArgs << "-Xlint:all"
+  options.compilerArgs << "-Xlint:-serial"
+}
+
+javadoc {
+  title = "openTCS ${project.version} API documentation: ${project.name}"
+
+  options {
+    header = "openTCS ${project.version}"
+    overview = "${projectDir}/src/main/java/overview.html"
+    addBooleanOption('Werror', true)
+    addBooleanOption('Xdoclint:all,-missing', true)
+  }
+}
+
+task sourcesJar(type: Jar, dependsOn: classes, description: 'Creates a jar from the source files.') {
+  archiveClassifier = 'sources'
+  from sourceSets.main.allSource
+}
+
+test {
+  useJUnitPlatform()
+  // ignoreFailures = true
+  systemProperties.put("java.awt.headless", "true")
+}
+
+ext {
+  // Attributes for the AsciiDoc documentation to include code from source files
+  javaSrcDir = sourceSets.main.java.srcDirs[0]
+  javaClassesDir = sourceSets.main.output.classesDirs
+  testSrcDir = sourceSets.test.java.srcDirs[0]
+}
+
+spotless {
+  java {
+    // Use the default import order configuration
+    importOrder()
+
+    // Use the Eclipse JDT formatter
+    eclipse('4.38').configFile("${rootDir}/config/eclipse-formatter-preferences.xml")
+  }
+}

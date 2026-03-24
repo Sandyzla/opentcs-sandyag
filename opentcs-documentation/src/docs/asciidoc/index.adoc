@@ -1,0 +1,33 @@
+// SPDX-FileCopyrightText: The openTCS Authors
+// SPDX-License-Identifier: CC-BY-4.0
+
+= openTCS: Distribution Documentation
+The openTCS developers
+:doctype: article
+:toc!:
+:sectnums!:
+:docinfo: shared
+:stylesdir: _assets/css/
+:icons: font
+:source-highlighter: coderay
+:coderay-linenums-mode: table
+:last-update-label!:
+:experimental:
+
+== Content
+
+* Release Notes:
+** Change Log: link:./changelog.html[HTML]
+** Contributors List: link:./contributors.html[HTML]
+* User Resources:
+** User's Guide:
+   link:./users-guide.html[HTML]
+* Developer Resources:
+** Developer's Guide:
+   link:./developers-guide.html[HTML]
+** Base API:
+   link:./api-base/index.html[JavaDoc documentation]
+** Injection API:
+   link:./api-injection/index.html[JavaDoc documentation]
+** Web API:
+   link:./service-web-api-v1/index.html?docExpansion=list[OpenAPI documentation]
