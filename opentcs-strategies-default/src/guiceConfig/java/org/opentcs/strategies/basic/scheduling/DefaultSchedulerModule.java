@@ -6,6 +6,7 @@ import com.google.inject.multibindings.Multibinder;
 import jakarta.inject.Singleton;
 import org.opentcs.components.kernel.Scheduler;
 import org.opentcs.customizations.kernel.KernelInjectionModule;
+import org.opentcs.strategies.basic.scheduling.modules.HardTimeWindowModule;
 import org.opentcs.strategies.basic.scheduling.modules.PausedVehicleModule;
 import org.opentcs.strategies.basic.scheduling.modules.SameDirectionBlockModule;
 import org.opentcs.strategies.basic.scheduling.modules.SingleVehicleBlockModule;
@@ -39,6 +40,7 @@ public class DefaultSchedulerModule
     moduleBinder.addBinding().to(SingleVehicleBlockModule.class);
     moduleBinder.addBinding().to(SameDirectionBlockModule.class);
     moduleBinder.addBinding().to(PausedVehicleModule.class);
+    moduleBinder.addBinding().to(HardTimeWindowModule.class);
 
     moduleBinder.addBinding().to(AreaAllocationModule.class);
     bind(AreaProvider.class)
