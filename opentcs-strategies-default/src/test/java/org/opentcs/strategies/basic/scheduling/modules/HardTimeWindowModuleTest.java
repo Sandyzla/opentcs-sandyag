@@ -5,14 +5,18 @@ package org.opentcs.strategies.basic.scheduling.modules;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import jakarta.annotation.Nonnull;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.opentcs.components.kernel.Scheduler;
+import org.opentcs.components.kernel.services.TCSObjectService;
 import org.opentcs.data.TCSObjectReference;
 import org.opentcs.data.model.Point;
 import org.opentcs.data.model.TCSResource;
@@ -77,9 +81,41 @@ class HardTimeWindowModuleTest {
     assertThrows(IllegalArgumentException.class, () -> module.mayAllocate(client, Set.of(point)));
   }
 
+  @Test
+  void allowsAllocationForHigherPriorityOnConflictingReservation() {
+    Clock fixedClock = Clock.fixed(Instant.parse("2026-04-01T10:00:00Z"), ZoneId.of("UTC"));
+    TCSObjectService objectService = mock(TCSObjectService.class);
+    Vehicle vehicle01 = new Vehicle("vehicle-01")
+        .withProperty(DefaultReservationPriorityResolver.PROPKEY_RESERVATION_PRIORITY, "1");
+    Vehicle vehicle02 = new Vehicle("vehicle-02")
+        .withProperty(DefaultReservationPriorityResolver.PROPKEY_RESERVATION_PRIORITY, "2");
+    when(objectService.fetch(Vehicle.class, "vehicle-01")).thenReturn(java.util.Optional.of(vehicle01));
+    when(objectService.fetch(Vehicle.class, "vehicle-02")).thenReturn(java.util.Optional.of(vehicle02));
+    when(objectService.fetch(Vehicle.class)).thenReturn(Set.of(vehicle01, vehicle02));
+    HardTimeWindowModule module = new HardTimeWindowModule(
+        objectService,
+        new DefaultReservationPriorityResolver(),
+        new Object(),
+        fixedClock
+    );
+    Point point = new Point("P1");
+    module.setAllocationState(new SampleClient("vehicle-01"), Set.of(), List.of(Set.of(point)));
+    module.setAllocationState(new SampleClient("vehicle-02"), Set.of(), List.of(Set.of(point)));
+
+    assertTrue(module.mayAllocate(new SampleClient("vehicle-02"), Set.of(point)));
+    assertFalse(module.mayAllocate(new SampleClient("vehicle-01"), Set.of(point)));
+  }
+
   private HardTimeWindowModule createModuleAt(String isoInstant) {
     Clock fixedClock = Clock.fixed(Instant.parse(isoInstant), ZoneId.of("UTC"));
-    return new HardTimeWindowModule(new Object(), fixedClock);
+    TCSObjectService objectService = mock(TCSObjectService.class);
+    when(objectService.fetch(Vehicle.class)).thenReturn(Set.of());
+    return new HardTimeWindowModule(
+        objectService,
+        new DefaultReservationPriorityResolver(),
+        new Object(),
+        fixedClock
+    );
   }
 
   private static class SampleClient

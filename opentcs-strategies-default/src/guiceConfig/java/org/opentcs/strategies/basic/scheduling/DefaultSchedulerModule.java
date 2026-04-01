@@ -6,8 +6,10 @@ import com.google.inject.multibindings.Multibinder;
 import jakarta.inject.Singleton;
 import org.opentcs.components.kernel.Scheduler;
 import org.opentcs.customizations.kernel.KernelInjectionModule;
+import org.opentcs.strategies.basic.scheduling.modules.DefaultReservationPriorityResolver;
 import org.opentcs.strategies.basic.scheduling.modules.HardTimeWindowModule;
 import org.opentcs.strategies.basic.scheduling.modules.PausedVehicleModule;
+import org.opentcs.strategies.basic.scheduling.modules.ReservationPriorityResolver;
 import org.opentcs.strategies.basic.scheduling.modules.SameDirectionBlockModule;
 import org.opentcs.strategies.basic.scheduling.modules.SingleVehicleBlockModule;
 import org.opentcs.strategies.basic.scheduling.modules.areaAllocation.AreaAllocationModule;
@@ -35,6 +37,9 @@ public class DefaultSchedulerModule
 
   private void configureSchedulerDependencies() {
     bind(ReservationPool.class).in(Singleton.class);
+    bind(ReservationPriorityResolver.class)
+        .to(DefaultReservationPriorityResolver.class)
+        .in(Singleton.class);
 
     Multibinder<Scheduler.Module> moduleBinder = schedulerModuleBinder();
     moduleBinder.addBinding().to(SingleVehicleBlockModule.class);
