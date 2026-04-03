@@ -44,7 +44,7 @@ public class ConfigurationImpl
 
   @Override
   public String clientId() {
-    return "opentcs-vda5050-driver";
+    return "opentcs-vda5050-software";
   }
 
   @Override

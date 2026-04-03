@@ -203,7 +203,7 @@ class AllocatorTask
    * Note that this does <em>not</em> return any previously claimed resources to the client!
    * </p>
    *
-   * @param command Describes the allocated resources.
+   * @param resources Describes the allocated resources.
    */
   private void undoAllocate(Client client, Set<TCSResource<?>> resources) {
     synchronized (globalSyncObject) {

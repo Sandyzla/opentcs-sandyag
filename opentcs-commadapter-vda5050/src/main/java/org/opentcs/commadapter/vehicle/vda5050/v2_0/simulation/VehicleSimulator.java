@@ -59,15 +59,15 @@ public class VehicleSimulator
   /**
    * Manufacturer of this agv.
    */
-  private static final String MANUFACTURER = "fraunhofer_iml";
+  private static final String MANUFACTURER = "acme";
   /**
    * Serial number.
    */
-  private static final String SERIAL_NUMBER = "S123";
+  private static final String SERIAL_NUMBER = "1";
   /**
    * Version.
    */
-  private static final String VERSION = "v1";
+  private static final String VERSION = "v2";
   /**
    * The base path for any topic.
    */
@@ -119,6 +119,17 @@ public class VehicleSimulator
    * Simulation task.
    */
   private ScheduledFuture<?> movementTask;
+
+  /**
+   * Ensure that the state's {@code agvPosition} object exists before updating its fields.
+   * This is needed because some commands (e.g. {@code move <node>}) explicitly clear the
+   * position so that no pose is sent in the next state message.
+   */
+  private void ensureAgvPosition() {
+    if (vehicleState.getAgvPosition() == null) {
+      vehicleState.setAgvPosition(new AgvPosition(0.0, 0.0, 0.0, "map", true));
+    }
+  }
 
   /**
    * Creates a new instance.
@@ -430,6 +441,7 @@ public class VehicleSimulator
       NodeState nextNode = vehicleState.getNodeStates().remove(0);
       vehicleState.setLastNodeId(nextNode.getNodeId());
       vehicleState.setLastNodeSequenceId(nextNode.getSequenceId());
+      ensureAgvPosition();
       vehicleState.getAgvPosition().setX(nextNode.getNodePosition().getX());
       vehicleState.getAgvPosition().setY(nextNode.getNodePosition().getY());
 
@@ -543,12 +555,16 @@ public class VehicleSimulator
           String destination = in.replace("move ", "");
           LOG.info("Moving to point {}", destination);
           vehicleState.setLastNodeId(destination);
+          // 不再发送 pose：清空 agvPosition，让 state 中不包含 agvPosition 字段，
+          // 这样 OperationsDesk 会根据 lastNodeId 在逻辑点上显示图标。
+          vehicleState.setAgvPosition(null);
           sendState();
         }
         else if (in.startsWith("setX ")) {
           String xPosition = in.replace("setX ", "");
           try {
             double xPos = Float.parseFloat(xPosition);
+            ensureAgvPosition();
             vehicleState.getAgvPosition().setX(xPos);
           }
           catch (NumberFormatException e) {
@@ -559,6 +575,7 @@ public class VehicleSimulator
           String yPosition = in.replace("setY ", "");
           try {
             double yPos = Float.parseFloat(yPosition);
+            ensureAgvPosition();
             vehicleState.getAgvPosition().setY(yPos);
           }
           catch (NumberFormatException e) {
